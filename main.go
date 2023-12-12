@@ -3,6 +3,7 @@ package main
 import (
 	"PetProject/controllers"
 	"PetProject/repositories"
+	"fmt"
 	"github.com/gin-gonic/gin"
 )
 
@@ -18,5 +19,8 @@ func main() {
 	r.GET("/books", controller.GetBooks)
 	r.POST("/books", controller.PostBooks)
 
+	fmt.Println("попробую откатить изменения")
+
 	r.Run(":8080")
+
 }
