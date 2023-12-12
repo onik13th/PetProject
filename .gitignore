@@ -1,0 +1,8 @@
+examples.txt
+
+*.log
+
+/compiled-files/
+
+/.idea/
+.idea/
