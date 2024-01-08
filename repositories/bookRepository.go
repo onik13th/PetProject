@@ -1,32 +1,71 @@
 package repositories
 
+import (
+	"errors"
+	"fmt"
+	"gorm.io/gorm"
+)
+
 type BookRepositoryInterface interface {
-	Create(Book)
 	Get() []Book
+	Make(Book) error
+	Update(Book, string) error
+	GetBookById(string) (*Book, error)
+	DeleteBookById(string) error
 }
 
 type BookRepository struct {
-	BookRepositoryInterface
+	*gorm.DB
 }
 
 type Book struct {
-	ID     string  `json:"id"`
+	gorm.Model
 	Title  string  `json:"title"`
 	Author string  `json:"author"`
 	Price  float64 `json:"price"`
 }
 
-var books = []Book{
-	{ID: "1", Title: "Капитал", Author: "Карл Маркс", Price: 69.69},
-	{ID: "2", Title: "Государство и революция", Author: "Владимир Ленин", Price: 49.99},
-	{ID: "3", Title: "Что делать?", Author: "Николай Чернышевский", Price: 35.99},
-	{ID: "4", Title: "Мартин Иден", Author: "Джек Лондон", Price: 40.00},
-}
-
-func (res *BookRepository) Create(newElement Book) {
-	books = append(books, newElement)
-}
-
-func (res *BookRepository) Get() []Book {
+func (db *BookRepository) Get() []Book {
+	var books []Book
+	db.Find(&books)
 	return books
+}
+
+func (db *BookRepository) Make(book Book) error {
+	result := db.Create(&book)
+	return result.Error
+}
+
+func (db *BookRepository) Update(book Book, id string) error {
+	// Сначала находим книгу по идентификатору.
+	var existingBook Book
+	if err := db.DB.First(&existingBook, "id = ?", id).Error; err != nil {
+		return err
+	}
+
+	// Теперь обновляем книгу новыми данными
+	return db.DB.Model(&existingBook).Updates(book).Error
+}
+
+func (db *BookRepository) GetBookById(id string) (*Book, error) {
+	var book Book
+	if err := db.DB.First(&book, "id = ?", id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("book with id '%s' not found", id)
+		}
+		// Другие ошибки
+		return nil, err
+	}
+	return &book, nil
+}
+
+func (db *BookRepository) DeleteBookById(id string) error {
+	result := db.DB.Delete(&Book{}, "id = ?", id)
+	if result.Error != nil {
+		return result.Error // ошибка связанная с бд
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("no book found with id '%s'", id) // нет записи для удаления
+	}
+	return fmt.Errorf("deletion was successful", nil)
 }
