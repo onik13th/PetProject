@@ -4,7 +4,6 @@ import (
 	"PetProject/errors"
 	"PetProject/repositories"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"net/http"
 )
 
@@ -12,51 +11,24 @@ type BookController struct {
 	Repository repositories.BookRepositoryInterface
 }
 
-func (res *BookController) GetBooks(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, res.Repository.Get())
-}
-
-func (res *BookController) PostBooks(c *gin.Context) {
-	var newBooks repositories.Book
-	if err := c.BindJSON(&newBooks); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, errors.Err{Error: "bad_request"})
-		return
-	}
-
-	err := res.Repository.Make(newBooks)
+func (bc *BookController) GetBooks(c *gin.Context) {
+	books, err := bc.Repository.Get()
 	if err != nil {
-		return
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	} else {
+		c.IndentedJSON(http.StatusOK, books)
 	}
-	c.IndentedJSON(http.StatusCreated, newBooks)
 }
 
-func (res *BookController) PatchBooks(c *gin.Context) {
-	var updateBook repositories.Book
-	if err := c.BindJSON(&updateBook); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, errors.Err{Error: "bad_request"})
-		return
-	}
-
+func (bc *BookController) GetBook(c *gin.Context) {
 	id := c.Param("id")
 
-	err := res.Repository.Update(updateBook, id)
+	book, err := bc.Repository.GetBookById(id)
 	if err != nil {
-		return
-	}
-	c.IndentedJSON(http.StatusOK, updateBook)
-}
-
-func (res *BookController) GetBook(c *gin.Context) {
-	id := c.Param("id")
-
-	book, err := res.Repository.GetBookById(id)
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			// если книга по указанному id не найдена
-			c.IndentedJSON(http.StatusNotFound, gin.H{"error": "book not found"})
+		if err.Error() == "book not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
-			// любая другая ошибка
-			c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 		return
 	}
@@ -64,20 +36,59 @@ func (res *BookController) GetBook(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, book)
 }
 
-func (res *BookController) DeleteBook(c *gin.Context) {
+func (bc *BookController) PostBook(c *gin.Context) {
+	var book repositories.Book
+
+	if err := c.ShouldBindJSON(&book); err != nil {
+		errs := errors.Wrap(err, "invalid json body")
+		c.JSON(http.StatusBadRequest, gin.H{"error": errs.Error()})
+		return
+	}
+
+	bookID, err := bc.Repository.Make(book)
+	if err != nil {
+		errs := errors.Wrap(err, "failed to create book")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errs.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"message": "Book created", "bookID": bookID})
+}
+
+func (bc *BookController) PatchBook(c *gin.Context) {
+	var updateBook repositories.Book
+	if err := c.BindJSON(&updateBook); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "bad_request"})
+		return
+	}
+
 	id := c.Param("id")
 
-	err := res.Repository.DeleteBookById(id)
+	err := bc.Repository.Update(updateBook, id)
 	if err != nil {
-		// если книга по указанному id не найдена
-		if err == gorm.ErrRecordNotFound {
-			c.IndentedJSON(http.StatusNotFound, gin.H{"error": "book not found"})
+		if err.Error() == "book not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
-			// любая другая ошибка
-			c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		}
 		return
 	}
-	//Если удаление прошло успешно, возвращается статус-код 204, указывающий на отсутствие содержимого
+
+	c.JSON(http.StatusOK, gin.H{"message": "Book updated", "book": updateBook})
+}
+
+func (bc *BookController) DeleteBook(c *gin.Context) {
+	id := c.Param("id")
+
+	err := bc.Repository.DeleteBookById(id)
+	if err != nil {
+		if err.Error() == "book not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+
 	c.Status(http.StatusNoContent)
 }

@@ -19,8 +19,8 @@ func main() {
 
 	r.GET("/books", controller.GetBooks)
 	r.GET("/books/:id", controller.GetBook)
-	r.POST("/books", controller.PostBooks)
-	r.PATCH("/books/:id", controller.PatchBooks)
+	r.POST("/books", controller.PostBook)
+	r.PATCH("/books/:id", controller.PatchBook)
 	r.DELETE("/books/:id", controller.DeleteBook)
 
 	err := r.Run(":8080")
