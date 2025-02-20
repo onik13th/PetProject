@@ -47,8 +47,8 @@ func (bc *BookController) PostBook(c *gin.Context) {
 
 	bookID, err := bc.Repository.Make(book)
 	if err != nil {
-		errs := errors.Wrap(err, "failed to create book")
-		c.JSON(http.StatusInternalServerError, gin.H{"error": errs.Error()})
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
 		return
 	}
 
@@ -82,7 +82,8 @@ func (bc *BookController) DeleteBook(c *gin.Context) {
 
 	err := bc.Repository.DeleteBookById(id)
 	if err != nil {
-		if err.Error() == "book not found" {
+		if err.Error() == "book not found TEST" {
+
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
 
