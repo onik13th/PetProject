@@ -74,7 +74,7 @@ func (bc *BookController) PatchBook(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Book updated", "book": updateBook})
+	c.JSON(http.StatusOK, gin.H{"message": "Book updated!", "book": updateBook})
 }
 
 func (bc *BookController) DeleteBook(c *gin.Context) {
@@ -85,8 +85,10 @@ func (bc *BookController) DeleteBook(c *gin.Context) {
 		if err.Error() == "book not found" {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
+			c.JSON(http.StatusInternalServerError, gin.H{"error test": err.Error()})
 		}
+
 		return
 	}
 
