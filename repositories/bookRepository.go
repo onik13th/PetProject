@@ -38,6 +38,7 @@ func (db *BookRepository) Get() ([]Book, error) {
 
 func (db *BookRepository) Make(book Book) (string, error) {
 	validate := validator.New()
+
 	// Валидация полей структуры Book
 	if err := validate.Struct(book); err != nil {
 		return "", err
@@ -54,6 +55,7 @@ func (db *BookRepository) Make(book Book) (string, error) {
 
 func (db *BookRepository) Update(book Book, id string) error {
 	validate := validator.New()
+
 	// Валидация полей структуры Book
 	if err := validate.Struct(book); err != nil {
 		return err
@@ -86,7 +88,7 @@ func (db *BookRepository) DeleteBookById(id string) error {
 		return result.Error // Ошибка связанная с бд
 	}
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("no book found with id '%s'", id) // Нет записи для удаления
+		return fmt.Errorf("book not found with id '%s'", id) // Нет записи для удаления
 	}
 	return nil
 }
