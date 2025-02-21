@@ -82,11 +82,12 @@ func (db *BookRepository) GetBookById(id string) (*Book, error) {
 
 func (db *BookRepository) DeleteBookById(id string) error {
 	result := db.Where("id = ?", id).Delete(&Book{})
+
 	if result.Error != nil {
 		return result.Error // Ошибка связанная с бд
 	}
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("no book found with id '%s'", id) // Нет записи для удаления
+		return fmt.Errorf("book not found with id '%s'", id) // Нет записи для удаления
 	}
 	return nil
 }

@@ -23,15 +23,7 @@ func (bc *BookController) GetBooks(c *gin.Context) {
 func (bc *BookController) GetBook(c *gin.Context) {
 	id := c.Param("id")
 
-	book, err := bc.Repository.GetBookById(id)
-	if err != nil {
-		if err.Error() == "book not found" {
-			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		} else {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		}
-		return
-	}
+	book, _ := bc.Repository.GetBookById(id)
 
 	c.IndentedJSON(http.StatusOK, book)
 }
@@ -59,6 +51,7 @@ func (bc *BookController) PatchBook(c *gin.Context) {
 	var updateBook repositories.Book
 	if err := c.BindJSON(&updateBook); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "bad_request"})
+
 		return
 	}
 
@@ -70,14 +63,21 @@ func (bc *BookController) PatchBook(c *gin.Context) {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		} else {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+
 		}
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Book updated!", "book": updateBook})
+	c.JSON(http.StatusOK, gin.H{"message": "The book has been updated successfully!", "book": updateBook})
 }
 
 func (bc *BookController) DeleteBook(c *gin.Context) {
+	//id := c.Param("id")
+
+	//c.Status(http.StatusNoContent)
+}
+
+func (bc *BookController) RemoveBook(c *gin.Context) {
 	id := c.Param("id")
 
 	err := bc.Repository.DeleteBookById(id)
