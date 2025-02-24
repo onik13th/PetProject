@@ -89,4 +89,3 @@ func (db *BookRepository) DeleteBookById(id string) error {
 		return fmt.Errorf("no book found with id '%s'", id) // Нет записи для удаления
 	}
 	return nil
-}
